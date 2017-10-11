@@ -1,15 +1,19 @@
+#include <Adafruit_GFX.h>
+#include <gfxfont.h>
+#include <TouchScreen.h>
 #include <Adafruit_TFTLCD.h>
 #include <pin_magic.h>
 #include <registers.h>
 // https://github.com/CodingTrain/Rainbow-Code/blob/c1c82f2a8b5f79a5f0bdae247aba87e595ccd470/CodingChallenges/CC_71_minesweeper
+
+const int w = 50;
 #define height 320
 #define width 240
-const int w = 20;
 #define cols int(floor(width / w))
 #define rows int(floor(height / w))
 #define totalBees 1
 
-Adafruit_TFTLCD tft;
+Adafruit_TFTLCD tft(A3, A2, A1, A0, A4);
 
 class Cell{
   public:
@@ -20,6 +24,7 @@ class Cell{
     void reveal(void);
     void floodFill(void);
     bool bee = false;
+    bool revealed = false;
   private:
     int i;
     int j;
@@ -27,7 +32,6 @@ class Cell{
     int x;
     int y;
     int neighborCount = 0;
-    bool revealed = false;
 };
 
 Cell * grid[int(cols)][int(rows)];
@@ -44,6 +48,7 @@ Cell::Cell(int ix, int jx, int wx){
 
 void Cell::show(void){
   tft.drawRect(x, y, w, w, 0);
+  Serial.print("Cell\t"); Serial.print(i); Serial.print(':'); Serial.println(j);
   if(revealed){
     if(bee){
       tft.fillCircle(x + w * 0.5, y + w * 0.5, w * 0.5, rgb2color(127,127,127));
@@ -100,11 +105,15 @@ void Cell::floodFill(void){
 }
 
 void setup(){
+  Serial.begin(9600);
   tft.reset();
   tft.begin(0x9341);
   tft.setRotation(1);
-  tft.fillScreen(0);
+  tft.fillScreen(rgb2color(255,255,255));
+  Serial.print(cols);
+  Serial.print('0');
   for(int i = 0; i < cols; i++) for(int j = 0; j < rows; j++) grid[i][j] = new Cell(i, j, w);
+  Serial.print('1');
   int options[int(cols*rows)][2];
   for(int i = 0; i < cols; i++) for(int j = 0; j < rows; j++){
     options[i*cols+j][0] = i;
@@ -122,38 +131,36 @@ void setup(){
     }
   }
   for(int i = 0; i < cols; i++) for(int j = 0; j < rows; j++) grid[i][j]->countBees();
+  Serial.print('2');
 }
 
-void loop{}
-
-/*function gameOver() {
-  for (var i = 0; i < cols; i++) {
-    for (var j = 0; j < rows; j++) {
-      grid[i][j].revealed = true;
+void gameOver() {
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      grid[i][j]->revealed = true;
     }
   }
 }
 
-function mousePressed() {
-  for (var i = 0; i < cols; i++) {
-    for (var j = 0; j < rows; j++) {
-      if (grid[i][j].contains(mouseX, mouseY)) {
-        grid[i][j].reveal();
+void mousePressed() {
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      //if (grid[i][j]->contains(mouseX, mouseY)) {
+        grid[i][j]->reveal();
 
-        if (grid[i][j].bee) {
+        if (grid[i][j]->bee) {
           gameOver();
         }
-
-      }
+      //}
     }
   }
 }
 
-function draw() {
-  background(255);
-  for (var i = 0; i < cols; i++) {
-    for (var j = 0; j < rows; j++) {
-      grid[i][j].show();
+void loop() {
+  tft.fillScreen(rgb2color(255,255,255));
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      grid[i][j]->show();
     }
   }
-}*/
+}
