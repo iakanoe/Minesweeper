@@ -28,18 +28,22 @@ Cell::Cell(int ix, int jx, int wx){
 }
 
 void Cell::show(void){
-  tft.drawRect(x, y, w, w, 0);
-  Serial.print("Cell\t"); Serial.print(i); Serial.print(':'); Serial.println(j);
+  drawMode();
+  //Serial.print("Cell\t"); Serial.print(i); Serial.print(':'); Serial.println(j);
   if(revealed){
-    if(bee){
-      tft.fillCircle(x + w * 0.5, y + w * 0.5, w * 0.5, rgb2color(127,127,127));
-    } else {
-      tft.fillRect(x, y, w, w, rgb2color(200, 200, 200));
+    tft.fillRect(x, y, w, w, rgb2color(127, 127, 127));
+    if(bee) tft.fillCircle(x + w * 0.5, y + w * 0.5, w * 0.5 - 5, rgb2color(0,255,0));
+    else {
       if(neighborCount > 0){
-        tft.drawChar(x + w * 0.5, y + w - 6, neighborCount + '0', 0, 1, 1);
+        tft.setTextColor(rgb2color(255,0,0));
+        tft.setTextSize(5);
+        tft.setCursor(x - 1 + w / 4, y + 1);
+        tft.println(neighborCount);
+        //tft.drawChar(x + w * 0.5, y + w - 6, '0' + char(neighborCount), 0, 1, 1);
       }
     }
   }
+  tft.drawRect(x, y, w, w, 0);
 }
 
 void Cell::countBees(void){
@@ -67,7 +71,8 @@ bool Cell::contains(int xx, int yx){
 
 void Cell::reveal(void){
   revealed = true;
-  if(neighborCount == 0) floodFill();
+  show();
+  if(neighborCount == 0 && inGame) floodFill();
 }
 
 void Cell::floodFill(void){
@@ -86,6 +91,7 @@ void Cell::floodFill(void){
 }
 
 void gameOver() {
+  inGame = false;
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       grid[i][j]->revealed = true;
@@ -94,14 +100,17 @@ void gameOver() {
 }
 
 void mousePressed(int xxx, int yyy) {
+  Serial.print("Click! "); Serial.print(xxx); Serial.print(','); Serial.println(yyy);
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       if (grid[i][j]->contains(xxx, yyy)) {
-        grid[i][j]->reveal();
-
-        if (grid[i][j]->bee) {
+         Serial.print("\tContained in cell "); Serial.print(i); Serial.print(','); Serial.println(j);
+        if (grid[i][j]->bee){
           gameOver();
+          return;
         }
+        grid[i][j]->reveal();
+        return;
       }
     }
   }
