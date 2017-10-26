@@ -71,7 +71,7 @@ bool Cell::contains(int xx, int yx){
 
 void Cell::reveal(void){
   revealed = true;
-  show();
+  //show();
   if(neighborCount == 0 && inGame) floodFill();
 }
 
@@ -97,14 +97,15 @@ void gameOver() {
       grid[i][j]->revealed = true;
     }
   }
+  Serial.println("Perdiste! Había una mina ahí");
 }
 
 void mousePressed(int xxx, int yyy) {
-  Serial.print("Click! "); Serial.print(xxx); Serial.print(','); Serial.println(yyy);
+  Serial.print("Click! "); Serial.print(xxx); Serial.print(','); Serial.print(yyy);
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       if (grid[i][j]->contains(xxx, yyy)) {
-         Serial.print("\tContained in cell "); Serial.print(i); Serial.print(','); Serial.println(j);
+         Serial.print("\tCelda "); Serial.print(i); Serial.print(','); Serial.println(j);
         if (grid[i][j]->bee){
           gameOver();
           return;
